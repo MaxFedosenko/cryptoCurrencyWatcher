@@ -1,9 +1,9 @@
 package com.idf.services;
 
-import org.springframework.http.ResponseEntity;
+import com.idf.entities.User;
 
 public interface UserService {
     
-    ResponseEntity<Double> notify(String userName, String symbol);
+    User notify(String userName, String symbol);
     
 }

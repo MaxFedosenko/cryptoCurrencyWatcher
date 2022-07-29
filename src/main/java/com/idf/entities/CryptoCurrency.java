@@ -1,9 +1,16 @@
 package com.idf.entities;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import java.util.List;
 
+@Data
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 public class CryptoCurrency {
 
     @Id
@@ -17,42 +24,5 @@ public class CryptoCurrency {
         this.id = id;
         this.symbol = symbol;
         this.priceUsd = priceUsd;
-    }
-    
-    public CryptoCurrency() {
-    }
-    
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
-    
-    public String getSymbol() {
-        return symbol;
-    }
-    
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
-    }
-    
-    public Double getPriceUsd() {
-        return priceUsd;
-    }
-    
-    public void setPriceUsd(Double priceUsd) {
-        this.priceUsd = priceUsd;
-    }
-    
-    
-    @Override
-    public String toString() {
-        return "CryptoCurrency{" +
-                "id=" + id +
-                ", symbol='" + symbol + '\'' +
-                ", priceUsd=" + priceUsd +
-                '}';
     }
 }
