@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.idf.entities.CryptoCurrency;
 import com.idf.repositories.CryptoRepository;
 import com.idf.services.CryptoService;
-import com.idf.services.FeignClientService;
+import com.idf.gateway.CryptoGateway;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ public class CryptoServiceImpl implements CryptoService{
     private ObjectMapper objectMapper;
     
     @Autowired
-    private FeignClientService feignService;
+    private CryptoGateway cryptoGateway;
     
     public CryptoCurrency getById(Long id) {
         return cryptoRepository.findById(id).get();
@@ -39,8 +39,9 @@ public class CryptoServiceImpl implements CryptoService{
         List<CryptoCurrency> cryptoCurrencies = cryptoRepository.findAll();
         int size = cryptoCurrencies.size();
         for (int i = 0; i < size; i++) {
-            String cryptoCurrency = feignService.getById(cryptoCurrencies.get(i).getId());
-            List<Map<String, Object>> maps = objectMapper.readValue(cryptoCurrency, new TypeReference<List<Map<String, Object>>>(){});
+            String cryptoCurrency = cryptoGateway.getById(cryptoCurrencies.get(i).getId());
+            List<Map<String, Object>> maps = objectMapper.readValue(cryptoCurrency, new TypeReference<>() {
+            });
             Object priceUsd = maps.get(0).get("price_usd");
             double price = Double.parseDouble(priceUsd.toString());
             cryptoRepository.update(price, cryptoCurrencies.get(i).getId());

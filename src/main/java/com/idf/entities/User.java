@@ -1,5 +1,6 @@
 package com.idf.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +21,16 @@ public class User {
     private Long id;
     private String userName;
     @ManyToOne(cascade = CascadeType.MERGE)
+    @JsonIgnore
     private CryptoCurrency cryptoCurrency;
     private Double priceUsd;
+    
+    @Override
+    public String toString() {
+        return "Person{"
+                + "userName='" + userName + '\''
+                + "cryptoCurrency='" + cryptoCurrency.getSymbol() + '\''
+                + ", price=" + priceUsd
+                + '}';
+    }
 }

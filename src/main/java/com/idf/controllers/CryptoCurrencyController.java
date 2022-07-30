@@ -1,6 +1,7 @@
 package com.idf.controllers;
 
 import com.idf.entities.CryptoCurrency;
+import com.idf.entities.User;
 import com.idf.services.impl.CryptoServiceImpl;
 import com.idf.services.impl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +31,9 @@ public class CryptoCurrencyController {
     }
     
     @PostMapping("{userName}/{symbol}")
-    public ResponseEntity<Double> notify(@PathVariable("userName") String  userName,
+    public ResponseEntity<User> notify(@PathVariable("userName") String  userName,
                                        @PathVariable("symbol") String symbol) {
-        return ResponseEntity.ok().body(userService.notify(userName, symbol).getPriceUsd());
+        return ResponseEntity.ok().body(userService.notify(userName, symbol));
     }
     
 
