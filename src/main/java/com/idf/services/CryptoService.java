@@ -1,12 +1,12 @@
 package com.idf.services;
 
-import com.idf.entities.CryptoCurrency;
+import com.idf.dto.CryptoCurrencyDTO;
 
 import java.util.List;
 
 public interface CryptoService {
     
-    List<CryptoCurrency> getAll();
-    CryptoCurrency getById(Long id);
+    List<CryptoCurrencyDTO> getAll();
+    CryptoCurrencyDTO getById(Long id);
     
 }

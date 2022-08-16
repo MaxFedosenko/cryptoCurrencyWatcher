@@ -7,12 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Optional;
 
 public interface CryptoRepository extends JpaRepository<CryptoCurrency, Long> {
     
-    List<CryptoCurrency> findAll();
-    CryptoCurrency findBySymbol(String symbol);
+    Optional<CryptoCurrency> findBySymbol(String symbol);
     
     @Transactional
     @Modifying

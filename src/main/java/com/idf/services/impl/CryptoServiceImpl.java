@@ -1,52 +1,56 @@
 package com.idf.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.idf.dto.CryptoCurrencyDTO;
 import com.idf.entities.CryptoCurrency;
+import com.idf.exceptions.NotFoundException;
+import com.idf.mapper.CryptoMapper;
 import com.idf.repositories.CryptoRepository;
 import com.idf.services.CryptoService;
 import com.idf.gateway.CryptoGateway;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
-public class CryptoServiceImpl implements CryptoService{
+@RequiredArgsConstructor
+@Slf4j
+public class CryptoServiceImpl implements CryptoService {
     
-    @Autowired
-    private CryptoRepository cryptoRepository;
+    private final CryptoRepository cryptoRepository;
     
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final CryptoGateway cryptoGateway;
     
-    @Autowired
-    private CryptoGateway cryptoGateway;
+    private final CryptoMapper cryptoMapper;
     
-    public CryptoCurrency getById(Long id) {
-        return cryptoRepository.findById(id).get();
+    public CryptoCurrencyDTO getById(Long id) {
+        return cryptoRepository.findById(id)
+                .map(cryptoMapper::toCryptoCurrencyDTO)
+                .orElseThrow(() -> new NotFoundException(String.format("Coin with id %s not found", id)));
     }
     
-    public List<CryptoCurrency> getAll() {
-        return cryptoRepository.findAll();
+    public List<CryptoCurrencyDTO> getAll() {
+        return cryptoRepository.findAll()
+                .stream()
+                .map(cryptoMapper::toCryptoCurrencyDTO)
+                .collect(Collectors.toList());
     }
     
-    @Scheduled(fixedDelay = 5000)
-    public void scheduledUpdate() throws JsonProcessingException {
-        List<CryptoCurrency> cryptoCurrencies = cryptoRepository.findAll();
-        int size = cryptoCurrencies.size();
-        for (int i = 0; i < size; i++) {
-            String cryptoCurrency = cryptoGateway.getById(cryptoCurrencies.get(i).getId());
-            List<Map<String, Object>> maps = objectMapper.readValue(cryptoCurrency, new TypeReference<>() {
-            });
-            Object priceUsd = maps.get(0).get("price_usd");
-            double price = Double.parseDouble(priceUsd.toString());
-            cryptoRepository.update(price, cryptoCurrencies.get(i).getId());
-        }
+    @Scheduled(cron = "0 * * * * *")
+    public void scheduledUpdate() {
+        cryptoRepository.findAll()
+                .forEach(currency -> {
+                    CryptoCurrency cryptoCurrency = cryptoMapper.toCryptoCurrency(
+                            cryptoGateway.getById(currency.getId())
+                                    .stream()
+                                    .findFirst()
+                                    .orElseThrow(() ->
+                                            new NotFoundException(
+                                                    String.format("Crypto currency with id %s not found", currency.getId()))));
+                    cryptoRepository.update(cryptoCurrency.getPriceUsd(), currency.getId());
+                });
     }
-    
-    
 }

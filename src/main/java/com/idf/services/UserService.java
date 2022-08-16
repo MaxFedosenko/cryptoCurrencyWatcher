@@ -1,9 +1,12 @@
 package com.idf.services;
 
+import com.idf.dto.UserDTO;
 import com.idf.entities.User;
+
+import java.util.Optional;
 
 public interface UserService {
     
-    User notify(String userName, String symbol);
+    UserDTO notify(String userName, String symbol);
     
 }

@@ -1,25 +1,20 @@
-package com.idf.entities;
+package com.idf.dto;
 
+import com.idf.entities.CryptoCurrency;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import javax.persistence.*;
 
-@Entity
 @Data
 @Accessors(chain = true)
-@NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@NoArgsConstructor
+public class UserDTO {
+    
+    private Long userId;
     private String userName;
-    @ManyToOne(cascade = CascadeType.MERGE)
     private CryptoCurrency cryptoCurrency;
     private Double priceUsd;
     

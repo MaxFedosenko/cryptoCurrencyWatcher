@@ -1,53 +1,55 @@
 package com.idf.services.impl;
 
 
+import com.idf.dto.UserDTO;
 import com.idf.entities.CryptoCurrency;
 import com.idf.entities.User;
+import com.idf.exceptions.NotContentException;
+import com.idf.mapper.UserMapper;
 import com.idf.repositories.CryptoRepository;
 import com.idf.repositories.UserRepository;
 import com.idf.services.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
     
-    @Autowired
-    private CryptoRepository cryptoRepository;
+    private final CryptoRepository cryptoRepository;
     
-    public User notify(String userName, String symbol) {
-        CryptoCurrency bySymbol = cryptoRepository.findBySymbol(symbol);
-        User user = userRepository.findByUserName(userName);
-        if (user == null) {
-            return userRepository.save(new User(null, userName, bySymbol, bySymbol.getPriceUsd()));
-        }
-        return user;
+    private final UserMapper userMapper;
+    
+    public UserDTO notify(String userName, String symbol) {
+        return userRepository.findByUserName(userName)
+                .map(userMapper::toUserDTO)
+                .orElseGet(() -> {
+                    CryptoCurrency cryptoCurrency = cryptoRepository.findBySymbol(symbol)
+                            .orElseThrow(() -> new NotContentException(String.format("Symbol %s does not exist", symbol)));
+                    return userMapper.toUserDTO(userRepository.save(new User()
+                            .setUserName(userName)
+                            .setPriceUsd(cryptoCurrency.getPriceUsd())
+                            .setCryptoCurrency(cryptoCurrency)));
+                });
     }
     
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(cron = "0 * * * * *")
     public void scheduledMessage() {
-        List<User> users = userRepository.findAll();
-        int size = users.size();
-        double result;
-        for (int i = 0; i < size; i++) {
-            Double priceUsdInit = users.get(i).getPriceUsd();
-            Double priceUsdChange = users.get(i).getCryptoCurrency().getPriceUsd();
-            result = ((priceUsdChange - priceUsdInit) / priceUsdInit) * 100;
-            String message = "%s цена на вашу криптовалюту %s выросла на %s%%";
-            String userName = users.get(i).getUserName();
-            String cryptoCurrency = users.get(i).getCryptoCurrency().getSymbol();
-            String resultFormatted = String.format("%.2f", result);
-            if (result > 1) {
-                log.warn(String.format(message, userName, cryptoCurrency, resultFormatted));
-            }
-        }
+        userRepository.findAll()
+                .forEach(user -> {
+                    double result = ((user.getCryptoCurrency().getPriceUsd() - user.getPriceUsd()) / user.getPriceUsd()) * 100;
+                    String resultFormatted = String.format("%.2f", result);
+                    if (result > 1) {
+                        log.warn(String.format("%s цена на вашу криптовалюту %s выросла на %s%%",
+                                user.getUserName(),
+                                user.getCryptoCurrency().getSymbol(),
+                                resultFormatted));
+                    }
+                });
     }
 }
